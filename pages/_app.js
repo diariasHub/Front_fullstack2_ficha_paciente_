@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import '../styles/globals.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 
@@ -13,6 +14,9 @@ function MyApp({ Component, pageProps }) {
   const router = useRouter();
 
   useEffect(() => {
+    // Load Bootstrap's JS only on the client
+    import('bootstrap/dist/js/bootstrap.bundle.min.js');
+
     if (protectedRoutes.includes(router.pathname)) {
       if (typeof window !== 'undefined' && !localStorage.getItem('isAuth')) {
         router.replace('/login');

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { getInsumos, agregarInsumo, editarInsumo, borrarInsumo } from '../services/insumoService';
+import { useEffect, useState } from 'react';
+import { getInsumos, fetchInsumos, agregarInsumo, editarInsumo, borrarInsumo } from '../services/insumoService';
 
 const insumosIniciales = [
   { id: 1, nombre: 'Guantes', cantidad: 20 },
@@ -23,6 +23,9 @@ function exportToXLS(insumos) {
 export default function StockPage() {
   const [insumos, setInsumos] = useState(getInsumos());
   const [nuevo, setNuevo] = useState({ nombre: '', cantidad: '' });
+  useEffect(() => {
+    fetchInsumos().then(setInsumos).catch(() => {});
+  }, []);
   const [editId, setEditId] = useState(null);
   const [editData, setEditData] = useState({ nombre: '', cantidad: '' });
   const [busqueda, setBusqueda] = useState('');
@@ -30,8 +33,9 @@ export default function StockPage() {
   const handleAdd = e => {
     e.preventDefault();
     if (nuevo.nombre && nuevo.cantidad > 0) {
-      agregarInsumo(nuevo.nombre, Number(nuevo.cantidad));
-      setInsumos(getInsumos());
+      Promise.resolve(agregarInsumo(nuevo.nombre, Number(nuevo.cantidad)))
+        .then(() => fetchInsumos().then(setInsumos))
+        .catch(() => setInsumos(getInsumos()));
       setNuevo({ nombre: '', cantidad: '' });
     }
   };
@@ -44,15 +48,17 @@ export default function StockPage() {
 
   const handleEditSave = e => {
     e.preventDefault();
-    editarInsumo(editId, editData.nombre, Number(editData.cantidad));
-    setInsumos(getInsumos());
+    Promise.resolve(editarInsumo(editId, editData.nombre, Number(editData.cantidad)))
+      .then(() => fetchInsumos().then(setInsumos))
+      .catch(() => setInsumos(getInsumos()));
     setEditId(null);
     setEditData({ nombre: '', cantidad: '' });
   };
 
   const handleDelete = id => {
-    borrarInsumo(id);
-    setInsumos(getInsumos());
+    Promise.resolve(borrarInsumo(id))
+      .then(() => fetchInsumos().then(setInsumos))
+      .catch(() => setInsumos(getInsumos()));
   };
 
   // Filtro de búsqueda
