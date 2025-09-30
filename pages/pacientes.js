@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { getInsumos, descontarInsumos } from '../services/insumoService';
+import { guardarConsulta } from '../services/consultaService';
 
 function validarRut(rut) {
   // Validación simple de RUT chileno
@@ -81,14 +82,13 @@ export default function PacienteForm() {
       setError('Teléfono inválido');
       return;
     }
-    descontarInsumos(usados.map(u => ({ id: u.id, cantidad: u.cantidad })));
-    setInsumos(getInsumos());
-    setError('');
-    const { fecha, hora } = getCurrentDateTime();
-    const usuario = getUsuario();
-    // guardarConsulta({ ...form, insumos: usados, vitales, fecha, hora, usuario });
-    setShowModal(true);
-    // ...guardar datos...
+  descontarInsumos(usados.map(u => ({ id: u.id, cantidad: u.cantidad })));
+  setInsumos(getInsumos());
+  setError('');
+  const { fecha, hora } = getCurrentDateTime();
+  const usuario = getUsuario();
+  guardarConsulta({ ...form, insumos: usados, vitales, fecha, hora, usuario });
+  setShowModal(true);
   };
 
   const handleCloseModal = () => {

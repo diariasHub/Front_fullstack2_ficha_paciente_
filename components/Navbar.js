@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
 export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
   useEffect(() => {
     function checkAdmin() {
       setIsAdmin(localStorage.getItem('usuario') === 'admin');
@@ -11,6 +13,15 @@ export default function Navbar() {
     window.addEventListener('storage', checkAdmin);
     return () => window.removeEventListener('storage', checkAdmin);
   }, []);
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('isAuth');
+      // keep usuario? remove it as well to avoid stale admin flag
+      localStorage.removeItem('usuario');
+    }
+    router.push('/login');
+  };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)' }}>
       <div className="container-fluid">
@@ -25,7 +36,7 @@ export default function Navbar() {
             <li className="nav-item"><Link href="/stock" className="btn btn-outline-light">Stock Insumos</Link></li>
             <li className="nav-item"><Link href="/graficos" className="btn btn-outline-light">Gráficos</Link></li>
             {isAdmin && <li className="nav-item"><Link href="/cuentas" className="btn btn-outline-warning">Cuentas</Link></li>}
-            <li className="nav-item"><Link href="/login" className="btn btn-danger">Salir</Link></li>
+            <li className="nav-item"><button onClick={handleLogout} className="btn btn-danger">Salir</button></li>
           </ul>
         </div>
       </div>
