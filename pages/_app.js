@@ -28,9 +28,12 @@ function MyApp({ Component, pageProps }) {
     <>
       {!noNavbarRoutes.includes(router.pathname) && <Navbar />}
       {sidebarRoutes.includes(router.pathname) ? (
-        <div className="d-flex">
+        <div
+          className="d-flex"
+          style={{ height: noNavbarRoutes.includes(router.pathname) ? '100vh' : 'calc(100vh - 56px)' }}
+        >
           <Sidebar />
-          <div className="flex-grow-1">
+          <div className="flex-grow-1 overflow-auto" style={{ height: '100%' }}>
             <Component {...pageProps} />
           </div>
         </div>
