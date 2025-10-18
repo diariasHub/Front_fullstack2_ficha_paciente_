@@ -1,7 +1,9 @@
-const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
-
 export function useApi() {
-  return USE_API;
+  try {
+    return typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_USE_API === 'true';
+  } catch {
+    return false;
+  }
 }
 
 export async function apiGet(path) {
