@@ -1,6 +1,7 @@
 // Configuración global para las pruebas
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import React from 'react';
 
 // Mock de Next.js Router
 const mockRouter = {
@@ -34,15 +35,14 @@ vi.mock('next/router', () => ({
 // Mock de Next.js Image
 vi.mock('next/image', () => ({
   default: ({ src, alt, ...props }) => {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} {...props} />;
+    return React.createElement('img', { src, alt, ...props });
   },
 }));
 
 // Mock de Next.js Link
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }) => {
-    return <a href={href} {...props}>{children}</a>;
+    return React.createElement('a', { href, ...props }, children);
   },
 }));
 

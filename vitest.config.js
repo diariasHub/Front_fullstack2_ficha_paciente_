@@ -3,7 +3,12 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxRuntime: 'automatic',
+      include: /\.(js|jsx|ts|tsx)$/, // Incluir archivos .js que pueden contener JSX
+    })
+  ],
   test: {
     // Configuración del entorno de pruebas
     environment: 'jsdom',
@@ -49,6 +54,15 @@ export default defineConfig({
     mockReset: true,
     clearMocks: true,
     restoreMocks: true
+  },
+  
+  esbuild: {
+    jsx: 'automatic',
+    jsxFactory: 'React.createElement',
+    jsxFragment: 'React.Fragment',
+    loader: {
+      '.js': 'jsx',
+    },
   },
   
   resolve: {

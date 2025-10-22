@@ -38,6 +38,15 @@ describe('insumoService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Resetear completamente los mocks para cada prueba
+    getJSON.mockReset();
+    setJSON.mockReset();
+    useApi.mockReset();
+    apiGet.mockReset();
+    apiPost.mockReset();
+    apiPut.mockReset();
+    apiDelete.mockReset();
+    fetch.mockReset();
   });
 
   afterEach(() => {
@@ -173,7 +182,13 @@ describe('insumoService', () => {
 
     it('debe manejar insumos inexistentes gracefully', () => {
       useApi.mockReturnValue(false);
-      getJSON.mockReturnValue([...insumosDefault]);
+      // Crear una copia fresca de los datos por defecto para esta prueba
+      const datosIniciales = [
+        { id: 1, nombre: 'Guantes', cantidad: 20 },
+        { id: 2, nombre: 'Jeringas', cantidad: 15 },
+        { id: 3, nombre: 'Alcohol', cantidad: 10 }
+      ];
+      getJSON.mockReturnValue(datosIniciales);
 
       const usados = [
         { id: 1, cantidad: 5 }, // Existe
@@ -289,7 +304,13 @@ describe('insumoService', () => {
 
     it('debe editar insumo en localStorage cuando useApi es false', () => {
       useApi.mockReturnValue(false);
-      getJSON.mockReturnValue([...insumosDefault]);
+      // Crear una copia fresca de los datos por defecto para esta prueba
+      const datosIniciales = [
+        { id: 1, nombre: 'Guantes', cantidad: 20 },
+        { id: 2, nombre: 'Jeringas', cantidad: 15 },
+        { id: 3, nombre: 'Alcohol', cantidad: 10 }
+      ];
+      getJSON.mockReturnValue(datosIniciales);
 
       editarInsumo(2, 'Jeringas Especiales', 25);
 
@@ -336,7 +357,13 @@ describe('insumoService', () => {
 
     it('debe borrar insumo de localStorage cuando useApi es false', () => {
       useApi.mockReturnValue(false);
-      getJSON.mockReturnValue([...insumosDefault]);
+      // Crear una copia fresca de los datos por defecto para esta prueba
+      const datosIniciales = [
+        { id: 1, nombre: 'Guantes', cantidad: 20 },
+        { id: 2, nombre: 'Jeringas', cantidad: 15 },
+        { id: 3, nombre: 'Alcohol', cantidad: 10 }
+      ];
+      getJSON.mockReturnValue(datosIniciales);
 
       borrarInsumo(2);
 
