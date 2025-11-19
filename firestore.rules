@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Colección de consultas médicas - Solo usuarios autenticados
+    match /consultas/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Colección de insumos médicos - Solo usuarios autenticados
+    match /insumos/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Colección de cuentas - Solo usuarios autenticados
+    // Lectura: Cualquier usuario autenticado
+    // Escritura: Solo para crear nuevas cuentas o actualizar la propia
+    match /cuentas/{cuentaId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && 
+                       (request.auth.uid == resource.data.uid || 
+                        get(/databases/$(database)/documents/cuentas/$(request.auth.uid)).data.cargo == 'Administrador');
+      allow delete: if request.auth != null && 
+                       get(/databases/$(database)/documents/cuentas/$(request.auth.uid)).data.cargo == 'Administrador';
+    }
+  }
+}

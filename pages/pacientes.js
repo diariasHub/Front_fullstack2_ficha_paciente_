@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { getInsumos, descontarInsumos } from '../services/insumoService';
+import { useState, useRef, useEffect } from 'react';
+import { getInsumos, fetchInsumos, descontarInsumos } from '../services/insumoService';
 import { guardarConsulta } from '../services/consultaService';
 
 function validarRut(rut) {
@@ -10,10 +10,11 @@ function validarRut(rut) {
 export default function PacienteForm() {
   const [form, setForm] = useState({
     nombre: '', edad: '', rut: '', carrera: '', telefono: '', motivo: '', tratamiento: '',
-    presion: '', fc: '', fr: '', temp: '', glicemia: '', dolor: '', glasgow: '', imagen: null
+    presion: '', fc: '', fr: '', temp: '', glicemia: '', dolor: '', glasgow: '', imagen: null,
+    aplicaDiae: false, imagenDiae: null
   });
   const [error, setError] = useState('');
-  const [insumos, setInsumos] = useState(getInsumos());
+  const [insumos, setInsumos] = useState([]);
   const [usados, setUsados] = useState([]);
   const [nuevoInsumo, setNuevoInsumo] = useState({ id: '', cantidad: '' });
   const [vitales, setVitales] = useState([]);
@@ -21,9 +22,20 @@ export default function PacienteForm() {
   const modalRef = useRef();
   const [showModal, setShowModal] = useState(false);
 
+  // Cargar insumos solo en el cliente para evitar errores de hidratación
+  useEffect(() => {
+    setInsumos(getInsumos());
+  }, []);
+
   const handleChange = e => {
-    const { name, value, files } = e.target;
-    setForm(f => ({ ...f, [name]: files ? files[0] : value }));
+    const { name, value, files, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setForm(f => ({ ...f, [name]: checked }));
+    } else if (files) {
+      setForm(f => ({ ...f, [name]: files[0] }));
+    } else {
+      setForm(f => ({ ...f, [name]: value }));
+    }
   };
 
   const handleInsumoChange = (id, value) => {
@@ -36,10 +48,19 @@ export default function PacienteForm() {
   const handleAddInsumo = e => {
     e.preventDefault();
     if (nuevoInsumo.id && nuevoInsumo.cantidad > 0) {
-      const ins = insumos.find(i => i.id === Number(nuevoInsumo.id));
-      if (ins && nuevoInsumo.cantidad <= ins.cantidad) {
-        setUsados([...usados, { id: ins.id, nombre: ins.nombre, cantidad: Number(nuevoInsumo.cantidad) }]);
-        setNuevoInsumo({ id: '', cantidad: '' });
+      // Firebase usa IDs tipo string, no Number
+      const ins = insumos.find(i => String(i.id) === String(nuevoInsumo.id));
+      if (ins) {
+        const cantidadSolicitada = Number(nuevoInsumo.cantidad);
+        const stockDisponible = Number(ins.cantidad);
+        
+        if (cantidadSolicitada <= stockDisponible) {
+          setUsados([...usados, { id: ins.id, nombre: ins.nombre, cantidad: cantidadSolicitada }]);
+          setNuevoInsumo({ id: '', cantidad: '' });
+        } else {
+          setError(`Stock insuficiente. Solo hay ${stockDisponible} unidades de ${ins.nombre}`);
+          setTimeout(() => setError(''), 3000); // Limpiar error después de 3 segundos
+        }
       }
     }
   };
@@ -49,7 +70,7 @@ export default function PacienteForm() {
   };
 
   const handleClear = () => {
-    setForm({ nombre: '', edad: '', rut: '', carrera: '', telefono: '', motivo: '', tratamiento: '', presion: '', fc: '', fr: '', temp: '', glicemia: '', dolor: '', glasgow: '', imagen: null });
+    setForm({ nombre: '', edad: '', rut: '', carrera: '', telefono: '', motivo: '', tratamiento: '', presion: '', fc: '', fr: '', temp: '', glicemia: '', dolor: '', glasgow: '', imagen: null, aplicaDiae: false, imagenDiae: null });
     setUsados([]);
     setNuevoInsumo({ id: '', cantidad: '' });
     setVitales([]);
@@ -68,7 +89,7 @@ export default function PacienteForm() {
     return typeof window !== 'undefined' ? localStorage.getItem('usuario') || 'admin' : 'admin';
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
     if (form.rut && !validarRut(form.rut)) {
       setError('RUT inválido');
@@ -82,13 +103,27 @@ export default function PacienteForm() {
       setError('Teléfono inválido');
       return;
     }
-  descontarInsumos(usados.map(u => ({ id: u.id, cantidad: u.cantidad })));
-  setInsumos(getInsumos());
-  setError('');
-  const { fecha, hora } = getCurrentDateTime();
-  const usuario = getUsuario();
-  guardarConsulta({ ...form, insumos: usados, vitales, fecha, hora, usuario });
-  setShowModal(true);
+    
+    try {
+      setError('');
+      const { fecha, hora } = getCurrentDateTime();
+      const usuario = getUsuario();
+      
+      // Guardar consulta en Firebase/localStorage
+      await guardarConsulta({ ...form, insumos: usados, vitales, fecha, hora, usuario });
+      
+      // Descontar insumos
+      await descontarInsumos(usados.map(u => ({ id: u.id, cantidad: u.cantidad })));
+      
+      // Recargar insumos actualizados
+      const insumosActualizados = await fetchInsumos();
+      setInsumos(insumosActualizados);
+      
+      setShowModal(true);
+    } catch (err) {
+      console.error('Error al guardar consulta:', err);
+      setError('Error al guardar la consulta. Por favor intenta nuevamente.');
+    }
   };
 
   const handleCloseModal = () => {
@@ -206,6 +241,70 @@ export default function PacienteForm() {
               </tbody>
             </table>
           </div>
+
+          {/* Sección DIAE - Seguro Escolar */}
+          <h5 className="mt-4 text-info">
+            <i className="bi bi-shield-check me-2"></i>
+            Seguro Escolar (DIAE)
+          </h5>
+          <div className="col-md-12">
+            <div className="form-check mb-3">
+              <input 
+                className="form-check-input" 
+                type="checkbox" 
+                name="aplicaDiae" 
+                id="aplicaDiae"
+                checked={form.aplicaDiae}
+                onChange={handleChange}
+              />
+              <label className="form-check-label" htmlFor="aplicaDiae">
+                Aplica DIAE (Seguro Escolar) <span className="text-muted">(Opcional)</span>
+              </label>
+            </div>
+          </div>
+
+          {form.aplicaDiae && (
+            <div className="col-md-12">
+              <div className="card border-info">
+                <div className="card-body">
+                  <h6 className="card-title">
+                    <i className="bi bi-file-earmark-image me-2"></i>
+                    Adjuntar Formulario DIAE
+                  </h6>
+                  <p className="text-muted small mb-3">
+                    Sube una imagen o PDF del formulario físico del seguro escolar
+                  </p>
+                  <div className="d-flex align-items-center gap-3">
+                    <label htmlFor="imagenDiae" className="btn btn-outline-info mb-0">
+                      <i className="bi bi-cloud-upload me-2"></i>
+                      Subir Imagen
+                    </label>
+                    <input 
+                      id="imagenDiae"
+                      name="imagenDiae"
+                      type="file" 
+                      className="d-none"
+                      accept="image/*,application/pdf"
+                      onChange={handleChange}
+                    />
+                    {form.imagenDiae && (
+                      <div className="alert alert-success mb-0 py-2 px-3 d-flex align-items-center gap-2">
+                        <i className="bi bi-check-circle"></i>
+                        <span>{form.imagenDiae.name}</span>
+                        <button 
+                          type="button" 
+                          className="btn-close btn-close-sm ms-2"
+                          onClick={() => setForm(f => ({ ...f, imagenDiae: null }))}
+                          aria-label="Eliminar archivo"
+                        ></button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="col-md-12 mb-2 d-flex align-items-end gap-2">
             <div className="col-md-6">
               <select className="form-select" value={nuevoInsumo.id} onChange={e => setNuevoInsumo({ ...nuevoInsumo, id: e.target.value })}>
@@ -249,21 +348,29 @@ export default function PacienteForm() {
           {error && <div className="alert alert-danger mt-2">{error}</div>}
         </form>
         {showModal && (
-          <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1" role="dialog">
-            <div className="modal-dialog modal-dialog-centered" role="document">
+          <div 
+            className="modal fade show" 
+            style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0.5)' }} 
+            tabIndex="-1" 
+            role="dialog"
+            onClick={handleCloseModal}
+          >
+            <div className="modal-dialog modal-dialog-centered" role="document" onClick={(e) => e.stopPropagation()}>
               <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Consulta guardada</h5>
+                <div className="modal-header bg-success text-white">
+                  <h5 className="modal-title">
+                    <i className="bi bi-check-circle me-2"></i>
+                    Consulta guardada
+                  </h5>
                 </div>
                 <div className="modal-body">
-                  <p>La consulta se ha guardado satisfactoriamente.</p>
+                  <p className="mb-0">La consulta se ha guardado satisfactoriamente.</p>
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-primary" onClick={handleCloseModal}>Aceptar</button>
                 </div>
               </div>
             </div>
-            <div className="modal-backdrop fade show"></div>
           </div>
         )}
       </div>

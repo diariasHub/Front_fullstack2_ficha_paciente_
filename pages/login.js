@@ -1,20 +1,34 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { validarCredenciales } from '../services/cuentaService';
 
 export default function LoginPage() {
   const [user, setUser] = useState('');
   const [pass, setPass] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (user === 'admin' && pass === 'admin') {
-      localStorage.setItem('isAuth', 'true');
-      localStorage.setItem('usuario', user);
-      router.push('/dashboard');
-    } else {
-      setError('Usuario o contraseña incorrectos');
+    setError('');
+    setLoading(true);
+    
+    try {
+      const cuenta = await validarCredenciales(user, pass);
+      if (cuenta) {
+        localStorage.setItem('isAuth', 'true');
+        localStorage.setItem('usuario', user);
+        localStorage.setItem('cargo', cuenta.cargo);
+        router.push('/dashboard');
+      } else {
+        setError('Usuario o contraseña incorrectos');
+      }
+    } catch (error) {
+      console.error('Error al iniciar sesión:', error);
+      setError('Error al validar credenciales. Verifica tu conexión.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -24,10 +38,17 @@ export default function LoginPage() {
         <h2 className="mb-3 text-center text-primary">Bienvenido</h2>
         <p className="text-center text-secondary">Por favor, inicia sesión para continuar</p>
         <form onSubmit={handleLogin}>
-          <input type="text" className="form-control mb-2" placeholder="Usuario" value={user} onChange={e => setUser(e.target.value)} required />
-          <input type="password" className="form-control mb-2" placeholder="Contraseña" value={pass} onChange={e => setPass(e.target.value)} required />
-          <button className="btn btn-primary w-100" type="submit">Ingresar</button>
-          {error && <div className="alert alert-danger mt-2">{error}</div>}
+          <input type="text" className="form-control mb-2" placeholder="Usuario" value={user} onChange={e => setUser(e.target.value)} required disabled={loading} />
+          <input type="password" className="form-control mb-2" placeholder="Contraseña" value={pass} onChange={e => setPass(e.target.value)} required disabled={loading} />
+          <button className="btn btn-primary w-100" type="submit" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Validando...
+              </>
+            ) : 'Ingresar'}
+          </button>
+          {error && <div className="alert alert-danger mt-2 mb-0">{error}</div>}
         </form>
       </div>
     </div>

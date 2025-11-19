@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
+import FloatingPharmacyButton from '../components/FloatingPharmacyButton';
 
 const protectedRoutes = ['/dashboard', '/pacientes', '/consultas', '/stock', '/graficos'];
 const noNavbarRoutes = ['/login'];
@@ -40,6 +41,9 @@ function MyApp({ Component, pageProps }) {
       ) : (
         <Component {...pageProps} />
       )}
+      
+      {/* Botón flotante de farmacias - visible en todas las vistas */}
+      <FloatingPharmacyButton />
     </>
   );
 }
