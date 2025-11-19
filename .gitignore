@@ -6,4 +6,21 @@ dist/
 out/
 coverage/
 .DS_Store
-node_modules
+
+# Archivos de configuración sensibles
+*CREDENCIALES*
+*FIREBASE*
+*CONFIGURACION*
+*SEGURIDAD*
+*SISTEMA_CUENTAS*
+*SOLUCION*
+config/
+secrets/
+*.key
+*.pem
+*.p12
+
+# Archivos temporales
+*.tmp
+*.temp
+.cache/
