@@ -119,34 +119,36 @@ export default function GraficosPage() {
         </h2>
         
         {/* Tarjetas de resumen */}
-        <div className="row mb-4">
+        <div className="row mb-4 g-3">
           <div className="col-md-4">
-            <div className="card text-center border-primary mb-3" style={{ borderWidth: '2px' }}>
-              <div className="card-body">
-                <i className="bi bi-people-fill text-primary" style={{ fontSize: '2rem' }}></i>
-                <h5 className="card-title mt-2">Total Pacientes</h5>
-                <p className="display-6 text-primary fw-bold">{totalPacientes}</p>
+            <div className="card shadow-sm h-100" style={{ border: '1px solid #e5e7eb' }}>
+              <div className="card-body text-center d-flex flex-column justify-content-center" style={{ minHeight: '180px' }}>
+                <i className="bi bi-people-fill text-primary mb-3" style={{ fontSize: '2.5rem' }}></i>
+                <h6 className="card-title text-muted mb-2 text-uppercase" style={{ fontSize: '0.875rem', letterSpacing: '0.5px' }}>Total Pacientes</h6>
+                <p className="display-5 fw-bold mb-0 text-primary">{totalPacientes}</p>
               </div>
             </div>
           </div>
           <div className="col-md-4">
-            <div className="card text-center border-success mb-3" style={{ borderWidth: '2px' }}>
-              <div className="card-body">
-                <i className="bi bi-shield-check text-success" style={{ fontSize: '2rem' }}></i>
-                <h5 className="card-title mt-2">Seguros DIAE</h5>
-                <p className="display-6 text-success fw-bold">{totalDiae}</p>
-                <small className="text-muted">{totalPacientes > 0 ? ((totalDiae / totalPacientes) * 100).toFixed(1) : 0}% del total</small>
+            <div className="card shadow-sm h-100" style={{ border: '1px solid #e5e7eb' }}>
+              <div className="card-body text-center d-flex flex-column justify-content-center" style={{ minHeight: '180px' }}>
+                <i className="bi bi-shield-check text-success mb-3" style={{ fontSize: '2.5rem' }}></i>
+                <h6 className="card-title text-muted mb-2 text-uppercase" style={{ fontSize: '0.875rem', letterSpacing: '0.5px' }}>Seguros DIAE</h6>
+                <p className="display-5 fw-bold mb-1 text-success">{totalDiae}</p>
+                <small className="text-muted" style={{ fontSize: '0.813rem' }}>
+                  {totalPacientes > 0 ? ((totalDiae / totalPacientes) * 100).toFixed(1) : 0}% del total
+                </small>
               </div>
             </div>
           </div>
           <div className="col-md-4">
-            <div className="card text-center border-info mb-3" style={{ borderWidth: '2px' }}>
-              <div className="card-body">
-                <i className="bi bi-mortarboard-fill text-info" style={{ fontSize: '2rem' }}></i>
-                <h5 className="card-title mt-2">Carreras Diferentes</h5>
-                <p className="display-6 text-info fw-bold">{carreras.length}</p>
+            <div className="card shadow-sm h-100" style={{ border: '1px solid #e5e7eb' }}>
+              <div className="card-body text-center d-flex flex-column justify-content-center" style={{ minHeight: '180px' }}>
+                <i className="bi bi-mortarboard-fill text-info mb-3" style={{ fontSize: '2.5rem' }}></i>
+                <h6 className="card-title text-muted mb-2 text-uppercase" style={{ fontSize: '0.875rem', letterSpacing: '0.5px' }}>Carreras Diferentes</h6>
+                <p className="display-5 fw-bold mb-1 text-info">{carreras.length}</p>
                 {carreras.length > 0 && (
-                  <small className="text-muted d-block" style={{ maxHeight: '40px', overflow: 'hidden' }}>
+                  <small className="text-muted d-block" style={{ fontSize: '0.813rem', maxHeight: '40px', overflow: 'hidden' }}>
                     {carreras.slice(0, 3).join(', ')}{carreras.length > 3 && '...'}
                   </small>
                 )}
